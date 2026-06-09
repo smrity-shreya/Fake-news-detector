@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FakeGuard – Fake News Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+
+<!-- ── NOISE OVERLAY ── -->
+<div class="noise-overlay"></div>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="container-fluid px-4 px-md-5 d-flex align-items-center justify-content-between">
+    <div class="brand d-flex align-items-center gap-3">
+      <div class="brand-icon">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="17" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 18l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="18" cy="18" r="6" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+      <span class="brand-name">FakeGuard</span>
+    </div>
+    <div class="header-badge">AI-Powered Analysis</div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero-section">
+  <div class="container-fluid px-4 px-md-5">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <div class="hero-label">MACHINE LEARNING · NLP · LOGISTIC REGRESSION</div>
+        <h1 class="hero-title">
+          Can You Tell<br/>
+          <span class="accent-line">Real From Fake?</span>
+        </h1>
+        <p class="hero-sub">
+          Paste any news article or headline below. Our TF-IDF + Logistic Regression
+          model analyses linguistic patterns to detect misinformation with confidence scoring.
+        </p>
+      </div>
+      <div class="col-lg-5 d-none d-lg-flex justify-content-end">
+        <div class="hero-stats">
+          <div class="stat-pill">
+            <span class="stat-num" id="stat-analysed">0</span>
+            <span class="stat-label">Analysed</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-num">TF-IDF</span>
+            <span class="stat-label">Vectorisation</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-num">LR</span>
+            <span class="stat-label">Classifier</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MAIN CONTENT ── -->
+<main class="main-content">
+  <div class="container-fluid px-4 px-md-5">
+    <div class="row g-4 g-xl-5">
+
+      <!-- LEFT: INPUT PANEL -->
+      <div class="col-lg-6">
+        <div class="panel input-panel">
+          <div class="panel-header">
+            <div class="panel-dot dot-orange"></div>
+            <div class="panel-dot dot-yellow"></div>
+            <div class="panel-dot dot-green"></div>
+            <span class="panel-title ms-3">News Input</span>
+          </div>
+          <div class="panel-body">
+            <label class="field-label" for="newsText">Paste news article or headline</label>
+            <textarea
+              id="newsText"
+              class="news-input"
+              placeholder="e.g. Scientists have discovered a new treatment for cancer that could be widely available by 2026 …"
+              rows="9"
+            ></textarea>
+            <div class="d-flex align-items-center justify-content-between mt-2 mb-4">
+              <span class="char-counter" id="charCounter">0 characters</span>
+              <button class="btn-clear" id="clearBtn" onclick="clearInput()">Clear</button>
+            </div>
+            <button class="btn-predict" id="predictBtn" onclick="predict()">
+              <span class="btn-predict-text">Analyse Article</span>
+              <span class="btn-predict-icon">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: RESULT PANEL -->
+      <div class="col-lg-6">
+        <div class="panel result-panel" id="resultPanel">
+          <div class="panel-header">
+            <div class="panel-dot dot-orange"></div>
+            <div class="panel-dot dot-yellow"></div>
+            <div class="panel-dot dot-green"></div>
+            <span class="panel-title ms-3">Analysis Result</span>
+          </div>
+          <div class="panel-body d-flex flex-column align-items-center justify-content-center" id="resultBody" style="min-height:340px;">
+            <div class="empty-state" id="emptyState">
+              <div class="empty-icon">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+                  <path d="M22 32h20M32 22v20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <p>Results will appear here<br/>after analysis</p>
+            </div>
+
+            <!-- RESULT OUTPUT (hidden until used) -->
+            <div class="result-output d-none w-100" id="resultOutput">
+              <div class="verdict-badge" id="verdictBadge">
+                <span class="verdict-icon" id="verdictIcon">✓</span>
+                <span class="verdict-text" id="verdictText">REAL</span>
+              </div>
+              <div class="confidence-block mt-4 w-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="conf-label">Confidence</span>
+                  <span class="conf-value" id="confValue">0%</span>
+                </div>
+                <div class="conf-bar-wrap">
+                  <div class="conf-bar" id="confBar" style="width:0%"></div>
+                </div>
+              </div>
+              <div class="prob-row mt-4">
+                <div class="prob-item">
+                  <div class="prob-label">REAL</div>
+                  <div class="prob-val" id="realProb">—</div>
+                </div>
+                <div class="prob-divider"></div>
+                <div class="prob-item">
+                  <div class="prob-label">FAKE</div>
+                  <div class="prob-val" id="fakeProb">—</div>
+                </div>
+              </div>
+              <div class="preview-text mt-4" id="previewText"></div>
+              <div class="result-timestamp" id="resultTimestamp"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── HISTORY TABLE ── -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <div class="panel history-panel">
+          <div class="panel-header">
+            <div class="panel-dot dot-orange"></div>
+            <div class="panel-dot dot-yellow"></div>
+            <div class="panel-dot dot-green"></div>
+            <span class="panel-title ms-3">Prediction History</span>
+            <button class="btn-clear ms-auto" onclick="loadHistory()">↻ Refresh</button>
+          </div>
+          <div class="panel-body p-0">
+            <div class="table-responsive">
+              <table class="history-table w-100" id="historyTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Timestamp</th>
+                    <th>Preview</th>
+                    <th>Result</th>
+                    <th>Confidence</th>
+                    <th>Real %</th>
+                    <th>Fake %</th>
+                  </tr>
+                </thead>
+                <tbody id="historyBody">
+                  <tr class="empty-row">
+                    <td colspan="7">No predictions yet — run an analysis above.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <div class="container-fluid px-4 px-md-5 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <span class="footer-brand">FakeGuard</span>
+    <span class="footer-meta">Python · Flask · Scikit-learn · TF-IDF · Logistic Regression</span>
+    <span class="footer-copy">Built for educational purposes</span>
+  </div>
+</footer>
+
+<!-- ── LOADING OVERLAY ── -->
+<div class="loading-overlay d-none" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <p>Analysing …</p>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast-msg d-none" id="toastMsg"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const textarea    = document.getElementById('newsText');
+const charCounter = document.getElementById('charCounter');
+textarea.addEventListener('input', () => {
+  const n = textarea.value.length;
+  charCounter.textContent = `${n.toLocaleString()} character${n !== 1 ? 's' : ''}`;
+});
+
+function clearInput() {
+  textarea.value = '';
+  charCounter.textContent = '0 characters';
+  document.getElementById('emptyState').classList.remove('d-none');
+  document.getElementById('resultOutput').classList.add('d-none');
+  document.getElementById('resultPanel').className = 'panel result-panel';
+}
+
+function showToast(msg, type = 'error') {
+  const t = document.getElementById('toastMsg');
+  t.textContent = msg;
+  t.className = `toast-msg toast-${type}`;
+  setTimeout(() => { t.className = 'toast-msg d-none'; }, 3500);
+}
+
+async function predict() {
+  const text = textarea.value.trim();
+  if (!text) { showToast('Please enter some news text first.'); return; }
+
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.remove('d-none');
+
+  try {
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Server error.'); return; }
+    renderResult(data);
+    loadHistory();
+    updateAnalysedCount();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  } finally {
+    overlay.classList.add('d-none');
+  }
+}
+
+function renderResult(data) {
+  const isFake  = data.prediction === 'FAKE';
+  const panel   = document.getElementById('resultPanel');
+  const badge   = document.getElementById('verdictBadge');
+  const icon    = document.getElementById('verdictIcon');
+  const txt     = document.getElementById('verdictText');
+  const bar     = document.getElementById('confBar');
+  const confVal = document.getElementById('confValue');
+  const real    = document.getElementById('realProb');
+  const fake    = document.getElementById('fakeProb');
+  const preview = document.getElementById('previewText');
+  const ts      = document.getElementById('resultTimestamp');
+
+  document.getElementById('emptyState').classList.add('d-none');
+  document.getElementById('resultOutput').classList.remove('d-none');
+
+  panel.className = `panel result-panel result-${isFake ? 'fake' : 'real'}`;
+  badge.className = `verdict-badge verdict-${isFake ? 'fake' : 'real'}`;
+  icon.textContent = isFake ? '✗' : '✓';
+  txt.textContent  = data.prediction;
+
+  confVal.textContent = `${data.confidence}%`;
+  bar.style.width     = `${data.confidence}%`;
+  bar.className       = `conf-bar conf-bar-${isFake ? 'fake' : 'real'}`;
+
+  real.textContent    = `${data.real_probability}%`;
+  fake.textContent    = `${data.fake_probability}%`;
+  preview.textContent = data.text_preview;
+  ts.textContent      = `Analysed at ${data.timestamp}`;
+}
+
+async function loadHistory() {
+  try {
+    const res  = await fetch('/history');
+    const rows = await res.json();
+    const body = document.getElementById('historyBody');
+    if (!rows.length) {
+      body.innerHTML = '<tr class="empty-row"><td colspan="7">No predictions yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map((r, i) => `
+      <tr class="history-row history-row-${r.prediction.toLowerCase()}">
+        <td class="idx">${i + 1}</td>
+        <td class="ts">${r.timestamp}</td>
+        <td class="preview-cell">${r.text_preview}</td>
+        <td><span class="tag tag-${r.prediction.toLowerCase()}">${r.prediction}</span></td>
+        <td>${r.confidence}%</td>
+        <td>${r.real_probability}%</td>
+        <td>${r.fake_probability}%</td>
+      </tr>`).join('');
+  } catch (_) {}
+}
+
+function updateAnalysedCount() {
+  const el = document.getElementById('stat-analysed');
+  let n = parseInt(el.textContent) || 0;
+  el.textContent = n + 1;
+}
+
+textarea.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') predict();
+});
+
+loadHistory();
+</script>
+</body>
+</html>
