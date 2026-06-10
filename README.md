@@ -4,7 +4,7 @@ A full-stack machine-learning web application that classifies news articles as *
 
 ---
 
-## live demo: https: //web-production-05ede.up.railway.app/
+## live demo: https://web-production-05ede.up.railway.app/
 ## github repository: https://github.com/smrity-shreya/Fake-news-detector.git
 
 ---
